@@ -1,0 +1,2 @@
+rsync -r src lights.local:/home/admin/raspi_lights
+rsync -r Cargo.* lights.local:/home/admin/raspi_lights
