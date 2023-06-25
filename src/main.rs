@@ -1,3 +1,5 @@
+mod scene;
+
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
 fn main() {
