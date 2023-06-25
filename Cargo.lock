@@ -110,6 +110,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "colorsys"
+version = "0.6.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54261aba646433cb567ec89844be4c4825ca92a4f8afba52fc4dd88436e31bbd"
+
+[[package]]
 name = "combine"
 version = "4.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -550,6 +556,7 @@ dependencies = [
 name = "raspi_lights"
 version = "0.1.0"
 dependencies = [
+ "colorsys",
  "cpal",
  "meyda",
 ]
