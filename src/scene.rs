@@ -21,7 +21,7 @@ impl Scene {
             // (total_time.as_secs_f32() as f64 * -8.0 + i as f64 * 0.2).sin() * 0.5 + 0.5;
             // let green = (total_time.as_secs_f32() as f64 * -6.1 + i as f64 * 0.1).sin() * 0.5 + 0.5;
             // let blue = (total_time.as_secs_f32() as f64 * -7.2 + i as f64 * 0.15).sin() * 0.5 + 0.5;
-            let red = 0.5;
+            let red = 0.1;
             let green = 0.0;
             let blue = 0.0;
 
