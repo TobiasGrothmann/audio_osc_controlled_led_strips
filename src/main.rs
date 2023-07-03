@@ -1,10 +1,20 @@
+mod audio;
+mod constants;
+mod led;
 mod scene;
 mod value_history;
 
-use std::time::Duration;
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+    time::{Duration, Instant},
+};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 use value_history::ValueHistory;
+
+use crate::{audio::AudioFeaturesHistory, constants::NUM_LEDS, led::render_scene, scene::Scene};
 
 fn main() {
     let host = cpal::default_host();
@@ -23,13 +33,18 @@ fn main() {
         device.name().expect("could not get input device name")
     );
 
-    let mut rms_history = ValueHistory::new();
+    let audio_feature_history = Arc::new(Mutex::new(AudioFeaturesHistory::new()));
+    let audio_feature_history_audio_thread = audio_feature_history.clone();
 
     let stream = device
         .build_input_stream(
             &config.into(),
             move |data, _: &_| {
-                audio_in_callback::<f32, f32>(data, sample_rate as f64, &mut rms_history);
+                audio_in_callback::<f32, f32>(
+                    data,
+                    sample_rate as f64,
+                    &audio_feature_history_audio_thread,
+                );
             },
             move |err| {
                 eprintln!("an error occurred on stream: {}", err);
@@ -38,51 +53,71 @@ fn main() {
         )
         .expect("could not create stream");
 
-    stream.play().expect("couldn ot start stream");
-    std::thread::sleep(std::time::Duration::from_secs(5));
+    stream.play().expect("could not start stream");
 
     let mut controller = ControllerBuilder::new()
-        .freq(800_000)
-        .dma(10)
         .channel(
             0, // Channel Index
             ChannelBuilder::new()
-                .pin(10) // GPIO 10 = SPI0 MOSI
-                .count(64) // Number of LEDs
+                .pin(10)
+                .count(NUM_LEDS as i32)
+                .brightness(50)
                 .strip_type(StripType::Ws2812)
-                .brightness(20) // default: 255
                 .build(),
         )
         .build()
         .unwrap();
 
-    let leds = controller.leds_mut(0);
+    let mut scene = Scene::new();
 
-    for led in leds {
-        *led = [0, 0, 255, 0];
+    let start_time = Instant::now();
+    let mut time_last_tick = start_time;
+
+    loop {
+        thread::sleep(Duration::from_millis(30));
+
+        // compute time
+        let now = Instant::now();
+        let total_time = now - start_time;
+        let time_since_last_tick = now - time_last_tick;
+
+        // get audio values
+        // let audio_features = audio_feature_history
+        //     .lock()
+        //     .unwrap()
+        //     .average(Duration::from_secs_f32(1.0));
+
+        // let a = audio_feature_history
+        //     .lock()
+        //     .unwrap()
+        //     .delete_older_than(Duration::from_secs_f32(1.0));
+
+        // scene.tick(time_since_last_tick, total_time, audio_features);
+        scene.tick(time_since_last_tick, total_time);
+        render_scene(&mut controller, &scene);
+
+        time_last_tick = now
     }
-
-    controller.render().unwrap();
 }
 
-fn audio_in_callback<T, U>(signal_arr: &[f32], _sample_rate: f64, rms_history: &mut ValueHistory) {
+fn audio_in_callback<T, U>(
+    signal_arr: &[f32],
+    sample_rate: f64,
+    audio_feature_history: &Mutex<AudioFeaturesHistory>,
+) {
     let signal: Vec<f64> = signal_arr
         .iter()
         .map(|sample_f32| *sample_f32 as f64)
         .collect();
 
-    let rms = meyda::get_rms(&signal);
-    rms_history.add(rms as f32);
+    let rms = meyda::get_rms(&signal) as f32;
+    let energy = meyda::get_energy(&signal) as f32;
+    // println!("{}", rms);
 
-    println!("{}", rms_history.average(Duration::from_secs_f32(5.0)));
-    rms_history.delete_older_than(Duration::from_secs(10));
+    let mut lock = audio_feature_history
+        .lock()
+        .expect("could not lock audio feature history to add values");
 
-    // let energy = meyda::get_energy(&signal);
-    // let zcr = meyda::get_zcr(&signal);
-    // let power_spectrum = meyda::get_power_spectrum(&signal);
-    // let spectral_centroid = meyda::get_spectral_centroid(&signal);
-    // let spectral_flatness = meyda::get_spectral_flatness(&signal);
-    // let spectral_kurtosis = meyda::get_spectral_kurtosis(&signal);
-    // let spectral_rolloff = meyda::get_spectral_rolloff(&signal, sample_rate, Some(0.95));
-    // let bark_loudness = meyda::get_bark_loudness(&signal, sample_rate);
+    lock.rms.add(rms);
+    lock.energy.add(energy);
 }
