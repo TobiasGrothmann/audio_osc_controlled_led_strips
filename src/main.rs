@@ -58,14 +58,14 @@ fn main() {
         .channel(
             0, // Channel Index
             ChannelBuilder::new()
-                .pin(10)
+                .pin(21)
                 .count(NUM_LEDS as i32)
-                .brightness(255)
+                .brightness(150)
                 .strip_type(StripType::Ws2812)
                 .build(),
         )
         .build()
-        .unwrap();
+        .expect("could not build controller");
 
     let mut scene = Scene::new();
 
@@ -79,24 +79,23 @@ fn main() {
         let time_since_last_tick = now - time_last_tick;
 
         // get audio values
-        // let audio_features = audio_feature_history
-        //     .lock()
-        //     .unwrap()
-        //     .average(Duration::from_secs_f32(1.0));
+        let audio_features = audio_feature_history
+            .lock()
+            .expect("could not lock audio feature history to get values")
+            .average(Duration::from_secs_f32(1.0));
 
-        // let a = audio_feature_history
-        //     .lock()
-        //     .unwrap()
-        //     .delete_older_than(Duration::from_secs_f32(1.0));
+        let a = audio_feature_history
+            .lock()
+            .expect("could not lock audio feature history to delete older")
+            .delete_older_than(Duration::from_secs_f32(1.0));
 
         // scene.tick(time_since_last_tick, total_time, audio_features);
-        scene.tick(time_since_last_tick, total_time);
+        scene.tick(time_since_last_tick, total_time, &audio_features);
         render_scene(&mut controller, &scene);
 
         time_last_tick = now;
 
-        // thread::sleep(Duration::from_millis(30));
-        // thread::sleep(Duration::from_secs_f32(0.5));
+        thread::sleep(Duration::from_millis(50));
     }
 }
 
@@ -105,19 +104,19 @@ fn audio_in_callback<T, U>(
     sample_rate: f64,
     audio_feature_history: &Mutex<AudioFeaturesHistory>,
 ) {
-    // let signal: Vec<f64> = signal_arr
-    //     .iter()
-    //     .map(|sample_f32| *sample_f32 as f64)
-    //     .collect();
+    let signal: Vec<f64> = signal_arr
+        .iter()
+        .map(|sample_f32| *sample_f32 as f64)
+        .collect();
 
-    // let rms = meyda::get_rms(&signal) as f32;
-    // let energy = meyda::get_energy(&signal) as f32;
-    // // println!("{}", rms);
+    let rms = meyda::get_rms(&signal) as f32;
+    let energy = meyda::get_energy(&signal) as f32;
+    // println!("{}", rms);
 
-    // let mut lock = audio_feature_history
-    //     .lock()
-    //     .expect("could not lock audio feature history to add values");
+    let mut lock = audio_feature_history
+        .lock()
+        .expect("could not lock audio feature history to add values");
 
-    // lock.rms.add(rms);
-    // lock.energy.add(energy);
+    lock.rms.add(rms);
+    lock.energy.add(energy);
 }

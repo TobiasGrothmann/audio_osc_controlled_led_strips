@@ -15,19 +15,24 @@ impl Scene {
         }
     }
 
-    pub fn tick(&mut self, _time_since_last_tick: Duration, total_time: Duration) {
+    pub fn tick(
+        &mut self,
+        _time_since_last_tick: Duration,
+        total_time: Duration,
+        audio_features: &AudioFeatures,
+    ) {
         for (i, led) in self.leds.iter_mut().enumerate() {
-            // let mut red =
-            // (total_time.as_secs_f32() as f64 * -8.0 + i as f64 * 0.2).sin() * 0.5 + 0.5;
+            let mut red =
+                (total_time.as_secs_f32() as f64 * -8.0 + i as f64 * 0.2).sin() * 0.5 + 0.5;
             // let green = (total_time.as_secs_f32() as f64 * -6.1 + i as f64 * 0.1).sin() * 0.5 + 0.5;
             // let blue = (total_time.as_secs_f32() as f64 * -7.2 + i as f64 * 0.15).sin() * 0.5 + 0.5;
-            let red = 0.1;
+            // let red = 0.1;
             let green = 0.0;
             let blue = 0.0;
 
-            // red = red * (audio_features.rms * 2.0) as f64;
+            red = red * (audio_features.rms * 2.0) as f64;
 
-            *led = Rgb::new(red, green, blue, None)
+            *led = Rgb::new(red * 0.4, green, blue, None)
         }
     }
 
