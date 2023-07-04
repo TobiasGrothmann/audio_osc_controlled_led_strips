@@ -4,7 +4,10 @@ mod led;
 mod scene;
 mod value_history;
 
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{
+    traits::{DeviceTrait, HostTrait, StreamTrait},
+    SupportedBufferSize,
+};
 use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 use std::{
     sync::{Arc, Mutex},
@@ -82,14 +85,17 @@ fn main() {
         let now = Instant::now();
         let total_time = now - start_time;
         let time_since_last_tick = now - time_last_tick;
+        time_last_tick = now;
 
-        let audio_average_seconds = 0.2;
+        let audio_average_seconds = 0.1;
+
+        // println!("frame dur millis: {}", time_since_last_tick.as_millis());
 
         // get audio values
         let audio_features = audio_feature_history
             .lock()
             .expect("could not lock audio feature history to get values")
-            .average(Duration::from_secs_f32(audio_average_seconds));
+            .time_range(Duration::from_secs_f32(audio_average_seconds));
 
         // delete old values
         audio_feature_history
@@ -101,8 +107,7 @@ fn main() {
         scene.tick(time_since_last_tick, total_time, &audio_features);
         render_scene(&mut controller, &scene);
 
-        time_last_tick = now;
-        thread::sleep(Duration::from_millis(20));
+        thread::sleep(Duration::from_millis(15));
     }
 }
 
@@ -115,6 +120,8 @@ fn audio_in_callback<T, U>(
         .iter()
         .map(|sample_f32| *sample_f32 as f64)
         .collect();
+
+    // println!("samples: {}", signal.len());
 
     let rms = meyda::get_rms(&signal);
     let energy = meyda::get_energy(&signal);

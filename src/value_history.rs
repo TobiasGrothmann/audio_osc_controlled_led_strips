@@ -36,11 +36,13 @@ impl ValueHistory {
     pub fn delete_older_than(&mut self, delete_before: Duration) {
         let now = Instant::now();
 
+        let mut length_before = self.history.len();
+
         self.history = self
             .history
             .iter()
             .map(|v| *v)
-            .filter(|value| value.time - now < delete_before)
+            .filter(|value| now - value.time < delete_before)
             .collect();
     }
 
