@@ -87,7 +87,7 @@ fn main() {
         let time_since_last_tick = now - time_last_tick;
         time_last_tick = now;
 
-        let audio_average_seconds = 0.1;
+        let audio_average_seconds = 0.35;
 
         // println!("frame dur millis: {}", time_since_last_tick.as_millis());
 
