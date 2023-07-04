@@ -5,16 +5,16 @@ use std::{
 
 #[derive(Copy, Clone)]
 pub struct Measurement {
-    value: f32,
+    value: f64,
     time: Instant,
 }
 
 #[derive(Copy, Clone)]
 pub struct ValueFeatures {
-    average: f32,
-    min: f32,
-    max: f32,
-    range: f32,
+    average: f64,
+    min: f64,
+    max: f64,
+    range: f64,
 }
 
 pub struct ValueHistory {
@@ -26,7 +26,7 @@ impl ValueHistory {
         Self { history: vec![] }
     }
 
-    pub fn add(&mut self, value: f32) {
+    pub fn add(&mut self, value: f64) {
         self.history.push(Measurement {
             value: value,
             time: Instant::now(),
@@ -44,28 +44,32 @@ impl ValueHistory {
             .collect();
     }
 
-    pub fn average(&self, since: Duration) -> f32 {
+    pub fn average(&self, since: Duration) -> f64 {
         let now = Instant::now();
 
-        let mut sum: f32 = 0.0;
+        let mut sum: f64 = 0.0;
         let mut num: usize = 0;
-        for value in self.history.iter() {
-            if now - value.time < since {
-                num += 1;
-                sum += value.value;
+        for value in self.history.iter().rev() {
+            if now - value.time > since {
+                break;
             }
+            num += 1;
+            sum += value.value;
         }
         if num == 0 {
-            return 0.0;
+            match self.history.last() {
+                Some(value) => return value.value,
+                None => return 0.0,
+            }
         }
-        sum / num as f32
+        sum / num as f64
     }
 
-    pub fn min_max(&self, since: Duration) -> (f32, f32) {
+    pub fn min_max(&self, since: Duration) -> (f64, f64) {
         let now = Instant::now();
 
-        let mut min: f32 = 0.0;
-        let mut max: f32 = 0.0;
+        let mut min: f64 = 0.0;
+        let mut max: f64 = 0.0;
         for value in self.history.iter() {
             if now - value.time < since {
                 max = max.max(value.value);

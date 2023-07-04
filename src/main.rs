@@ -12,7 +12,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{audio::AudioFeaturesHistory, constants::NUM_LEDS, led::render_scene, scene::Scene};
+use crate::{
+    audio::AudioFeaturesHistory,
+    constants::{BRIGHTNESS, NUM_LEDS, PIN},
+    led::render_scene,
+    scene::Scene,
+};
 use value_history::ValueHistory;
 
 fn main() {
@@ -58,9 +63,9 @@ fn main() {
         .channel(
             0, // Channel Index
             ChannelBuilder::new()
-                .pin(21)
-                .count(NUM_LEDS as i32)
-                .brightness(150)
+                .pin(PIN)
+                .count(NUM_LEDS)
+                .brightness(BRIGHTNESS)
                 .strip_type(StripType::Ws2812)
                 .build(),
         )
@@ -78,24 +83,26 @@ fn main() {
         let total_time = now - start_time;
         let time_since_last_tick = now - time_last_tick;
 
+        let audio_average_seconds = 0.2;
+
         // get audio values
         let audio_features = audio_feature_history
             .lock()
             .expect("could not lock audio feature history to get values")
-            .average(Duration::from_secs_f32(1.0));
+            .average(Duration::from_secs_f32(audio_average_seconds));
 
-        let a = audio_feature_history
+        // delete old values
+        audio_feature_history
             .lock()
             .expect("could not lock audio feature history to delete older")
-            .delete_older_than(Duration::from_secs_f32(1.0));
+            .delete_older_than(Duration::from_secs_f32(audio_average_seconds));
 
-        // scene.tick(time_since_last_tick, total_time, audio_features);
+        // render
         scene.tick(time_since_last_tick, total_time, &audio_features);
         render_scene(&mut controller, &scene);
 
         time_last_tick = now;
-
-        thread::sleep(Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(20));
     }
 }
 
@@ -109,9 +116,9 @@ fn audio_in_callback<T, U>(
         .map(|sample_f32| *sample_f32 as f64)
         .collect();
 
-    let rms = meyda::get_rms(&signal) as f32;
-    let energy = meyda::get_energy(&signal) as f32;
-    // println!("{}", rms);
+    let rms = meyda::get_rms(&signal);
+    let energy = meyda::get_energy(&signal);
+    let zcr = meyda::get_zcr(&signal);
 
     let mut lock = audio_feature_history
         .lock()
@@ -119,4 +126,5 @@ fn audio_in_callback<T, U>(
 
     lock.rms.add(rms);
     lock.energy.add(energy);
+    lock.zcr.add(energy);
 }
