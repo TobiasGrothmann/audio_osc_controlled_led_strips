@@ -17,7 +17,7 @@ use std::{
 
 use crate::{
     audio::AudioFeaturesHistory,
-    constants::{AUDIO_AVERAGE_SECONDS, BRIGHTNESS, FREQ_HPF, FREQ_LPF, NUM_LEDS, PIN},
+    constants::{BRIGHTNESS, FREQ_HPF, FREQ_LPF, NUM_LEDS, PIN},
     led::render_scene,
     osc::{osc_start_listen, OscFaderValue, OscFaderValues},
     scene::Scene,
@@ -102,7 +102,7 @@ fn main() {
         .build()
         .expect("could not build controller");
 
-    let mut scene = SceneStrobo::new();
+    let mut scene = SceneSine::new();
 
     let start_time = Instant::now();
     let mut time_last_tick = start_time;
@@ -116,20 +116,24 @@ fn main() {
 
         // println!("frame dur millis: {}", time_since_last_tick.as_millis());
 
+        // get osc values
+        let osc_fader_values = osc_fader_values_mutex.lock().unwrap().clone();
+        let osc_fader_values_for_scene = osc_fader_values.values[2].clone();
+
+        let audio_average_time_seconds =
+            osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
+
         // get audio values
         let audio_features = audio_feature_history
             .lock()
             .expect("could not lock audio feature history to get values")
-            .time_range(Duration::from_secs_f32(AUDIO_AVERAGE_SECONDS));
+            .time_range(Duration::from_secs_f32(audio_average_time_seconds));
 
         // delete old values
         audio_feature_history
             .lock()
             .expect("could not lock audio feature history to delete older")
-            .delete_older_than(Duration::from_secs_f32(AUDIO_AVERAGE_SECONDS));
-
-        let osc_fader_values = osc_fader_values_mutex.lock().unwrap();
-        let osc_fader_values_for_scene = osc_fader_values.values[2].clone();
+            .delete_older_than(Duration::from_secs_f32(audio_average_time_seconds.max(1.0)));
 
         // render
         scene.tick(
