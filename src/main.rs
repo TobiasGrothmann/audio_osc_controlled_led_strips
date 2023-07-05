@@ -21,9 +21,8 @@ use crate::{
     constants::{BRIGHTNESS, NUM_LEDS, PIN},
     led::render_scene,
     scene::Scene,
-    scenes::scene_sine::SceneSine,
+    scenes::{scene_sine::SceneSine, scene_travel_out::SceneTravelOut},
 };
-use value_history::ValueHistory;
 
 fn main() {
     let host = cpal::default_host();
@@ -77,7 +76,7 @@ fn main() {
         .build()
         .expect("could not build controller");
 
-    let mut scene = SceneSine::new();
+    let mut scene = SceneTravelOut::new();
 
     let start_time = Instant::now();
     let mut time_last_tick = start_time;
@@ -89,7 +88,7 @@ fn main() {
         let time_since_last_tick = now - time_last_tick;
         time_last_tick = now;
 
-        let audio_average_seconds = 0.35;
+        let audio_average_seconds = 0.2;
 
         // println!("frame dur millis: {}", time_since_last_tick.as_millis());
 
@@ -109,13 +108,13 @@ fn main() {
         scene.tick(time_since_last_tick, total_time, &audio_features);
         render_scene(&mut controller, &scene);
 
-        thread::sleep(Duration::from_millis(15));
+        thread::sleep(Duration::from_millis(25));
     }
 }
 
 fn audio_in_callback<T, U>(
     signal_arr: &[f32],
-    sample_rate: f64,
+    _sample_rate: f64,
     audio_feature_history: &Mutex<AudioFeaturesHistory>,
 ) {
     let signal: Vec<f64> = signal_arr
