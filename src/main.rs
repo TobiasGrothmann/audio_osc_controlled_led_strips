@@ -68,12 +68,17 @@ fn main() {
     .unwrap();
     let mut biquad_hpf = DirectForm1::<f64>::new(coeffs_hpf);
 
+    let amp_mutex = Arc::new(Mutex::new(1.0));
+    let amp_mutex_for_autio_thread = amp_mutex.clone();
+
     let stream = device
         .build_input_stream(
             &config.into(),
             move |data, _: &_| {
+                let amp = *amp_mutex_for_autio_thread.lock().unwrap();
                 audio_in_callback::<f32, f32>(
                     data,
+                    amp,
                     sample_rate as f64,
                     &audio_feature_history_audio_thread,
                     &mut biquad_lpf,
@@ -123,6 +128,8 @@ fn main() {
         let audio_average_time_seconds =
             osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
 
+        *amp_mutex.lock().unwrap() = osc_fader_values.values[0][0] * 2.0;
+
         // get audio values
         let audio_features = audio_feature_history
             .lock()
@@ -150,6 +157,7 @@ fn main() {
 
 fn audio_in_callback<T, U>(
     signal_arr: &[f32],
+    amp: f32,
     sample_rate: f64,
     audio_feature_history: &Mutex<AudioFeaturesHistory>,
     biquad_lpf: &mut DirectForm1<f64>,
@@ -157,7 +165,7 @@ fn audio_in_callback<T, U>(
 ) {
     let signal: Vec<f64> = signal_arr
         .iter()
-        .map(|sample_f32| *sample_f32 as f64)
+        .map(|sample_f32| (*sample_f32 * amp) as f64)
         .collect();
 
     // println!("samples: {}", signal.len());
