@@ -2,11 +2,7 @@ use std::time::{Duration, Instant};
 
 use colorsys::{Hsl, Rgb};
 
-use crate::{
-    audio::{self, AudioFeatures},
-    constants::NUM_LEDS,
-    scene::Scene,
-};
+use crate::{audio::AudioFeatures, constants::NUM_LEDS, scene::Scene};
 
 pub struct SceneStrobo {
     leds: [Rgb; NUM_LEDS as usize],

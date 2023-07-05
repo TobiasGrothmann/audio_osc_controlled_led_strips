@@ -2,10 +2,7 @@ use std::time::Duration;
 
 use colorsys::Rgb;
 
-use crate::{
-    audio::{self, AudioFeatures},
-    constants::NUM_LEDS,
-};
+use crate::{audio::AudioFeatures, constants::NUM_LEDS};
 
 pub trait Scene {
     fn tick(

@@ -1,18 +1,16 @@
 mod audio;
 mod constants;
 mod led;
+mod osc;
 mod scene;
 mod scenes;
 mod value_history;
 
 use biquad::{Biquad, Coefficients, DirectForm1, ToHertz, Type, Q_BUTTERWORTH_F32};
-use cpal::{
-    traits::{DeviceTrait, HostTrait, StreamTrait},
-    SupportedBufferSize,
-};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 use std::{
-    sync::{Arc, Mutex},
+    sync::{mpsc, Arc, Mutex},
     thread,
     time::{Duration, Instant},
 };
@@ -21,6 +19,7 @@ use crate::{
     audio::AudioFeaturesHistory,
     constants::{AUDIO_AVERAGE_SECONDS, BRIGHTNESS, FREQ_HPF, FREQ_LPF, NUM_LEDS, PIN},
     led::render_scene,
+    osc::osc_start_listen,
     scene::Scene,
     scenes::{
         scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_strobo::SceneStrobo,
@@ -28,6 +27,9 @@ use crate::{
 };
 
 fn main() {
+    let (tx, rx) = mpsc::channel();
+    osc_start_listen(tx);
+
     let host = cpal::default_host();
     let device = host
         .default_input_device()
