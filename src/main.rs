@@ -2,6 +2,7 @@ mod audio;
 mod constants;
 mod led;
 mod scene;
+mod scenes;
 mod value_history;
 
 use cpal::{
@@ -20,6 +21,7 @@ use crate::{
     constants::{BRIGHTNESS, NUM_LEDS, PIN},
     led::render_scene,
     scene::Scene,
+    scenes::scene_sine::SceneSine,
 };
 use value_history::ValueHistory;
 
@@ -75,7 +77,7 @@ fn main() {
         .build()
         .expect("could not build controller");
 
-    let mut scene = Scene::new();
+    let mut scene = SceneSine::new();
 
     let start_time = Instant::now();
     let mut time_last_tick = start_time;
