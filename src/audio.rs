@@ -2,16 +2,16 @@ use std::time::Duration;
 
 use crate::value_history::ValueHistory;
 
+pub struct AudioFeature {
+    pub avg: f64,
+    pub min: f64,
+    pub max: f64,
+}
+
 pub struct AudioFeatures {
-    pub rms_avg: f64,
-    pub rms_min: f64,
-    pub rms_max: f64,
-    pub energy_avg: f64,
-    pub energy_min: f64,
-    pub energy_max: f64,
-    pub zcr_avg: f64,
-    pub zcr_min: f64,
-    pub zcr_max: f64,
+    pub rms: AudioFeature,
+    pub energy: AudioFeature,
+    pub zcr: AudioFeature,
 }
 
 pub struct AudioFeaturesHistory {
@@ -35,15 +35,21 @@ impl AudioFeaturesHistory {
         let (zcr_min, zcr_max) = self.zcr.min_max(since);
 
         AudioFeatures {
-            rms_avg: self.rms.average(since),
-            rms_min: rms_min,
-            rms_max: rms_max,
-            energy_avg: self.energy.average(since),
-            energy_min: energy_min,
-            energy_max: energy_max,
-            zcr_avg: self.zcr.average(since),
-            zcr_min: zcr_min,
-            zcr_max: zcr_max,
+            rms: AudioFeature {
+                avg: self.rms.average(since),
+                min: rms_min,
+                max: rms_max,
+            },
+            energy: AudioFeature {
+                avg: self.energy.average(since),
+                min: energy_min,
+                max: energy_max,
+            },
+            zcr: AudioFeature {
+                avg: self.zcr.average(since),
+                min: zcr_min,
+                max: zcr_max,
+            },
         }
     }
 
