@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use colorsys::{Hsl, Rgb};
 
-use crate::{audio::AudioFeatures, constants::NUM_LEDS, scene::Scene};
+use crate::{audio::AudioFeatures, constants::NUM_LEDS, osc::OscFaderValues, scene::Scene};
 
 pub struct SceneStrobo {
     leds: [Rgb; NUM_LEDS as usize],
@@ -28,11 +28,11 @@ impl Scene for SceneStrobo {
         _time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
+        osc_fader_values: &Vec<f32>,
     ) {
         let hue = total_time.as_secs_f64() * 10.0;
 
-        self.interval =
-            Duration::from_secs_f64((0.1 - audio_features.energy.avg / 4000.0).clamp(0.03, 1.0));
+        self.interval = Duration::from_secs_f32(osc_fader_values[0].clamp(0.025, 1.0));
 
         if Instant::now() - self.last_switch > self.interval {
             self.is_on = !self.is_on;

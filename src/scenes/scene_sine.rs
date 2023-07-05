@@ -22,6 +22,7 @@ impl Scene for SceneSine {
         _time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
+        osc_fader_values: &Vec<f32>,
     ) {
         for (i, led) in self.leds.iter_mut().enumerate() {
             let mut red =

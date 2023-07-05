@@ -22,6 +22,7 @@ impl Scene for ScenePulseYellow {
         _time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
+        osc_fader_values: &Vec<f32>,
     ) {
         let hue = audio_features.zcr.avg * 0.00004;
         let lightness = audio_features.rms.avg * 0.4;

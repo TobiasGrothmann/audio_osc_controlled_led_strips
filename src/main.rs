@@ -19,7 +19,7 @@ use crate::{
     audio::AudioFeaturesHistory,
     constants::{AUDIO_AVERAGE_SECONDS, BRIGHTNESS, FREQ_HPF, FREQ_LPF, NUM_LEDS, PIN},
     led::render_scene,
-    osc::osc_start_listen,
+    osc::{osc_start_listen, OscFaderValue, OscFaderValues},
     scene::Scene,
     scenes::{
         scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_strobo::SceneStrobo,
@@ -27,8 +27,8 @@ use crate::{
 };
 
 fn main() {
-    let (tx, rx) = mpsc::channel();
-    osc_start_listen(tx);
+    let mut osc_fader_values_mutex = Arc::new(Mutex::new(OscFaderValues::new()));
+    osc_start_listen(osc_fader_values_mutex.clone());
 
     let host = cpal::default_host();
     let device = host
@@ -128,8 +128,16 @@ fn main() {
             .expect("could not lock audio feature history to delete older")
             .delete_older_than(Duration::from_secs_f32(AUDIO_AVERAGE_SECONDS));
 
+        let osc_fader_values = osc_fader_values_mutex.lock().unwrap();
+        let osc_fader_values_for_scene = osc_fader_values.values[2].clone();
+
         // render
-        scene.tick(time_since_last_tick, total_time, &audio_features);
+        scene.tick(
+            time_since_last_tick,
+            total_time,
+            &audio_features,
+            &osc_fader_values_for_scene,
+        );
         render_scene(&mut controller, &scene);
 
         thread::sleep(Duration::from_millis(15));

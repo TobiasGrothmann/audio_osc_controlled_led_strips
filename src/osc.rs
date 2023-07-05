@@ -7,6 +7,19 @@ use std::io::ErrorKind;
 use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use std::sync::mpsc::Sender;
+use std::sync::{Arc, Mutex};
+
+#[derive(Clone, Debug)]
+pub struct OscFaderValues {
+    pub values: Vec<Vec<f32>>,
+}
+impl OscFaderValues {
+    pub fn new() -> Self {
+        Self {
+            values: vec![vec![0.0; 30]; 10],
+        }
+    }
+}
 
 pub struct OscFaderValue {
     page: i32,
@@ -14,27 +27,28 @@ pub struct OscFaderValue {
     value: f32,
 }
 
-pub fn osc_start_listen(tx: Sender<OscFaderValue>) {
+pub fn osc_start_listen(osc_fader_values_mutex: Arc<Mutex<OscFaderValues>>) {
     let addr = SocketAddrV4::from_str("0.0.0.0:8000").unwrap();
     let sock = UdpSocket::bind(addr).unwrap();
 
     let mut buf = [0u8; rosc::decoder::MTU];
 
-    loop {
+    thread::spawn(move || loop {
         match sock.recv_from(&mut buf) {
             Ok((size, addr)) => {
                 let (_, packet) = rosc::decoder::decode_udp(&buf[..size]).unwrap();
-                let package_result = handle_packet(packet, &tx);
+                let package_result = handle_packet(packet, osc_fader_values_mutex.clone());
                 if !package_result.is_ok() {
                     println!("failed to parse packet");
                 }
             }
             Err(e) => {}
         }
-    }
+    });
 }
 
 use std::{error::Error, fmt};
+use std::{thread, vec};
 
 #[derive(Debug)]
 struct OscErr;
@@ -45,7 +59,10 @@ impl fmt::Display for OscErr {
     }
 }
 
-fn handle_packet(packet: OscPacket, tx: &Sender<OscFaderValue>) -> Result<()> {
+fn handle_packet(
+    packet: OscPacket,
+    osc_fader_values_mutex: Arc<Mutex<OscFaderValues>>,
+) -> Result<()> {
     match packet {
         OscPacket::Message(msg) => {
             // get value
@@ -61,20 +78,33 @@ fn handle_packet(packet: OscPacket, tx: &Sender<OscFaderValue>) -> Result<()> {
             let msg_arr: Vec<&str> = msg.addr.split("/").collect();
 
             // get page
-            let page_index = msg_arr.get(1).ok_or(OscErr {})?.parse::<i32>()?;
+            let page_index = msg_arr.get(1).ok_or(OscErr {})?.parse::<i32>()? - 1;
 
             // get index
             let fader_index = msg_arr
                 .last()
                 .ok_or(OscErr {})?
                 .replace("fader", "")
-                .parse::<i32>()?;
+                .parse::<i32>()?
+                - 1;
 
-            tx.send(OscFaderValue {
-                index: fader_index,
-                value: value,
-                page: page_index,
-            })?;
+            // write to fader values
+            let osc_fader_values_result = osc_fader_values_mutex.lock();
+            if osc_fader_values_result.is_err() {
+                Err(OscErr {})?;
+            };
+            let mut osc_fader_values = osc_fader_values_result.unwrap();
+            osc_fader_values.values[page_index as usize][fader_index as usize] = value;
+
+            if page_index < 0 || page_index >= 10 {
+                Err(OscErr {})?;
+            }
+            if fader_index < 0 || fader_index >= 30 {
+                Err(OscErr {})?;
+            }
+
+            // println!("{} - {}: {}", page_index, fader_index, value);
+
             Ok(())
         }
         _ => Ok(()),

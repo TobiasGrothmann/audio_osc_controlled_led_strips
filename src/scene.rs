@@ -10,6 +10,7 @@ pub trait Scene {
         time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
+        osc_fader_values: &Vec<f32>,
     );
 
     fn get_rgb(&self) -> &[Rgb; NUM_LEDS as usize];
