@@ -5,6 +5,7 @@ mod scene;
 mod scenes;
 mod value_history;
 
+use biquad::{Biquad, Coefficients, DirectForm1, ToHertz, Type, Q_BUTTERWORTH_F32};
 use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
     SupportedBufferSize,
@@ -18,7 +19,7 @@ use std::{
 
 use crate::{
     audio::AudioFeaturesHistory,
-    constants::{BRIGHTNESS, NUM_LEDS, PIN},
+    constants::{AUDIO_AVERAGE_SECONDS, BRIGHTNESS, FREQ_HPF, FREQ_LPF, NUM_LEDS, PIN},
     led::render_scene,
     scene::Scene,
     scenes::{
@@ -46,6 +47,25 @@ fn main() {
     let audio_feature_history = Arc::new(Mutex::new(AudioFeaturesHistory::new()));
     let audio_feature_history_audio_thread = audio_feature_history.clone();
 
+    // create filters
+    let coeffs_lpf = Coefficients::<f64>::from_params(
+        Type::LowPass,
+        (sample_rate as f64).hz(),
+        FREQ_LPF.hz(),
+        Q_BUTTERWORTH_F32 as f64,
+    )
+    .unwrap();
+    let mut biquad_lpf = DirectForm1::<f64>::new(coeffs_lpf);
+
+    let coeffs_hpf = Coefficients::<f64>::from_params(
+        Type::HighPass,
+        (sample_rate as f64).hz(),
+        FREQ_HPF.hz(),
+        Q_BUTTERWORTH_F32 as f64,
+    )
+    .unwrap();
+    let mut biquad_hpf = DirectForm1::<f64>::new(coeffs_hpf);
+
     let stream = device
         .build_input_stream(
             &config.into(),
@@ -54,6 +74,8 @@ fn main() {
                     data,
                     sample_rate as f64,
                     &audio_feature_history_audio_thread,
+                    &mut biquad_lpf,
+                    &mut biquad_hpf,
                 );
             },
             move |err| {
@@ -90,21 +112,19 @@ fn main() {
         let time_since_last_tick = now - time_last_tick;
         time_last_tick = now;
 
-        let audio_average_seconds = 0.2;
-
         // println!("frame dur millis: {}", time_since_last_tick.as_millis());
 
         // get audio values
         let audio_features = audio_feature_history
             .lock()
             .expect("could not lock audio feature history to get values")
-            .time_range(Duration::from_secs_f32(audio_average_seconds));
+            .time_range(Duration::from_secs_f32(AUDIO_AVERAGE_SECONDS));
 
         // delete old values
         audio_feature_history
             .lock()
             .expect("could not lock audio feature history to delete older")
-            .delete_older_than(Duration::from_secs_f32(audio_average_seconds));
+            .delete_older_than(Duration::from_secs_f32(AUDIO_AVERAGE_SECONDS));
 
         // render
         scene.tick(time_since_last_tick, total_time, &audio_features);
@@ -116,8 +136,10 @@ fn main() {
 
 fn audio_in_callback<T, U>(
     signal_arr: &[f32],
-    _sample_rate: f64,
+    sample_rate: f64,
     audio_feature_history: &Mutex<AudioFeaturesHistory>,
+    biquad_lpf: &mut DirectForm1<f64>,
+    biquad_hpf: &mut DirectForm1<f64>,
 ) {
     let signal: Vec<f64> = signal_arr
         .iter()
@@ -130,6 +152,21 @@ fn audio_in_callback<T, U>(
     let energy = meyda::get_energy(&signal);
     let zcr = meyda::get_zcr(&signal);
 
+    // lpf
+    let mut signal_lpf = vec![0.0; signal_arr.len()];
+    for (i, sample) in signal.iter().enumerate() {
+        signal_lpf[i] = biquad_lpf.run(*sample);
+    }
+    let rms_lpf = meyda::get_rms(&signal_lpf);
+
+    // hpf
+    let mut signal_hpf = vec![0.0; signal_arr.len()];
+    for (i, sample) in signal.iter().enumerate() {
+        signal_hpf[i] = biquad_hpf.run(*sample);
+    }
+    let rms_hpf = meyda::get_rms(&signal_hpf);
+
+    // add measurements
     let mut lock = audio_feature_history
         .lock()
         .expect("could not lock audio feature history to add values");
@@ -137,4 +174,7 @@ fn audio_in_callback<T, U>(
     lock.rms.add(rms);
     lock.energy.add(energy);
     lock.zcr.add(energy);
+
+    lock.rms_lpf.add(rms_lpf);
+    lock.rms_hpf.add(rms_hpf);
 }

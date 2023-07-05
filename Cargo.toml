@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 array2d = "0.3.0"
+biquad = "0.4.2"
 colorsys = "0.6.7"
 cpal = "0.15.2"
 meyda = { git = "https://github.com/meyda/meyda-rs.git" }

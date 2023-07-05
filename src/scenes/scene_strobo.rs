@@ -45,7 +45,7 @@ impl Scene for SceneStrobo {
 
         let mut brightness = 0.0;
         if self.is_on {
-            brightness = audio_features.rms.avg * 0.8;
+            brightness = audio_features.rms_hpf.avg;
         }
 
         let hsv = Hsl::new(hue % 360.0, 70.0, brightness * 100.0, None);
