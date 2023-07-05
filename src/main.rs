@@ -21,7 +21,9 @@ use crate::{
     constants::{BRIGHTNESS, NUM_LEDS, PIN},
     led::render_scene,
     scene::Scene,
-    scenes::{scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine},
+    scenes::{
+        scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_strobo::SceneStrobo,
+    },
 };
 
 fn main() {
@@ -76,7 +78,7 @@ fn main() {
         .build()
         .expect("could not build controller");
 
-    let mut scene = ScenePulseYellow::new();
+    let mut scene = SceneStrobo::new();
 
     let start_time = Instant::now();
     let mut time_last_tick = start_time;
@@ -108,7 +110,7 @@ fn main() {
         scene.tick(time_since_last_tick, total_time, &audio_features);
         render_scene(&mut controller, &scene);
 
-        thread::sleep(Duration::from_millis(25));
+        thread::sleep(Duration::from_millis(15));
     }
 }
 
