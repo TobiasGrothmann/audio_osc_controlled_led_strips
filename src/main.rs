@@ -21,7 +21,7 @@ use crate::{
     constants::{BRIGHTNESS, NUM_LEDS, PIN},
     led::render_scene,
     scene::Scene,
-    scenes::{scene_sine::SceneSine, scene_travel_out::SceneTravelOut},
+    scenes::{scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine},
 };
 
 fn main() {
@@ -76,7 +76,7 @@ fn main() {
         .build()
         .expect("could not build controller");
 
-    let mut scene = SceneTravelOut::new();
+    let mut scene = ScenePulseYellow::new();
 
     let start_time = Instant::now();
     let mut time_last_tick = start_time;

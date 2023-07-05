@@ -1,14 +1,14 @@
 use std::time::Duration;
 
-use colorsys::Rgb;
+use colorsys::{Hsl, Rgb};
 
 use crate::{audio::AudioFeatures, constants::NUM_LEDS, scene::Scene};
 
-pub struct SceneTravelOut {
+pub struct ScenePulseYellow {
     leds: [Rgb; NUM_LEDS as usize],
 }
 
-impl SceneTravelOut {
+impl ScenePulseYellow {
     pub fn new() -> Self {
         Self {
             leds: core::array::from_fn(|_| Rgb::new(0.0, 0.0, 0.0, None)),
@@ -16,28 +16,27 @@ impl SceneTravelOut {
     }
 }
 
-impl Scene for SceneTravelOut {
+impl Scene for ScenePulseYellow {
     fn tick(
         &mut self,
         _time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
     ) {
-        let brightness = (audio_features.rms_avg * 0.8).powf(2.0);
+        let hue = audio_features.zcr_avg * 0.00004;
+        let lightness = audio_features.rms_avg * 0.4;
 
-        self.leds[0] = Rgb::new(
-            brightness,
-            brightness * audio_features.energy_max * 0.0005,
-            brightness * 0.2,
+        let hsv = Hsl::new(hue * 360.0, 100.0, lightness * 100.0, None);
+        let rgb_255 = Rgb::from(hsv);
+        let rgb = Rgb::new(
+            rgb_255.red() / 255.0,
+            rgb_255.green() / 255.0,
+            rgb_255.blue() / 255.0,
             None,
         );
-        let leds_old = self.leds.clone();
 
         for (i, led) in self.leds.iter_mut().enumerate() {
-            if i == 0 {
-                continue;
-            }
-            *led = leds_old[i - 1].clone();
+            *led = rgb.clone();
         }
     }
 
