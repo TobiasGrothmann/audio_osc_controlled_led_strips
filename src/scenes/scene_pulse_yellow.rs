@@ -23,8 +23,8 @@ impl Scene for ScenePulseYellow {
         total_time: Duration,
         audio_features: &AudioFeatures,
     ) {
-        let hue = audio_features.zcr_avg * 0.00004;
-        let lightness = audio_features.rms_avg * 0.4;
+        let hue = audio_features.zcr.avg * 0.00004;
+        let lightness = audio_features.rms.avg * 0.4;
 
         let hsv = Hsl::new(hue * 360.0, 100.0, lightness * 100.0, None);
         let rgb_255 = Rgb::from(hsv);
