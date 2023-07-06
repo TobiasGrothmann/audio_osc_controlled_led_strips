@@ -32,7 +32,7 @@ impl Scene for SceneStrobo {
     ) {
         let hue = total_time.as_secs_f64() * 10.0;
 
-        self.interval = Duration::from_secs_f32(osc_fader_values[0].clamp(0.025, 1.0));
+        self.interval = Duration::from_millis(30);
 
         if Instant::now() - self.last_switch > self.interval {
             self.is_on = !self.is_on;

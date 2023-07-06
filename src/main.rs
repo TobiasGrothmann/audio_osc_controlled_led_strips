@@ -3,6 +3,7 @@ mod constants;
 mod led;
 mod osc;
 mod scene;
+mod scene_mixer;
 mod scenes;
 mod value_history;
 
@@ -21,6 +22,7 @@ use crate::{
     led::render_scene,
     osc::{osc_start_listen, OscFaderValue, OscFaderValues},
     scene::Scene,
+    scene_mixer::SceneMixer,
     scenes::{
         scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_strobo::SceneStrobo,
     },
@@ -107,7 +109,11 @@ fn main() {
         .build()
         .expect("could not build controller");
 
-    let mut scene = SceneSine::new();
+    let mut scene_mixer = SceneMixer::new(vec![
+        Box::new(SceneSine::new()),
+        Box::new(ScenePulseYellow::new()),
+        Box::new(SceneStrobo::new()),
+    ]);
 
     let start_time = Instant::now();
     let mut time_last_tick = start_time;
@@ -124,6 +130,7 @@ fn main() {
         // get osc values
         let osc_fader_values = osc_fader_values_mutex.lock().unwrap().clone();
         let osc_fader_values_for_scene = osc_fader_values.values[2].clone();
+        let osc_fader_values_for_mixer = osc_fader_values.values[1].clone();
 
         let audio_average_time_seconds =
             osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
@@ -143,13 +150,16 @@ fn main() {
             .delete_older_than(Duration::from_secs_f32(audio_average_time_seconds.max(1.0)));
 
         // render
-        scene.tick(
+        for (i, weight) in scene_mixer.weights.iter_mut().enumerate() {
+            *weight = osc_fader_values_for_mixer[i];
+        }
+        scene_mixer.tick(
             time_since_last_tick,
             total_time,
             &audio_features,
             &osc_fader_values_for_scene,
         );
-        render_scene(&mut controller, &scene);
+        render_scene(&mut controller, &scene_mixer);
 
         thread::sleep(Duration::from_millis(15));
     }
