@@ -24,7 +24,8 @@ use crate::{
     scene::Scene,
     scene_mixer::SceneMixer,
     scenes::{
-        scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_strobo::SceneStrobo,
+        scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_solid::SceneSolid,
+        scene_strobo::SceneStrobo,
     },
 };
 
@@ -110,9 +111,10 @@ fn main() {
         .expect("could not build controller");
 
     let mut scene_mixer = SceneMixer::new(vec![
+        Box::new(SceneStrobo::new()),
         Box::new(SceneSine::new()),
         Box::new(ScenePulseYellow::new()),
-        Box::new(SceneStrobo::new()),
+        Box::new(SceneSolid::new()),
     ]);
 
     let start_time = Instant::now();

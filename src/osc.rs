@@ -38,9 +38,9 @@ pub fn osc_start_listen(osc_fader_values_mutex: Arc<Mutex<OscFaderValues>>) {
             Ok((size, addr)) => {
                 let (_, packet) = rosc::decoder::decode_udp(&buf[..size]).unwrap();
                 let package_result = handle_packet(packet, osc_fader_values_mutex.clone());
-                if !package_result.is_ok() {
-                    println!("failed to parse packet");
-                }
+                // if !package_result.is_ok() {
+                //     println!("failed to parse packet");
+                // }
             }
             Err(e) => {}
         }
