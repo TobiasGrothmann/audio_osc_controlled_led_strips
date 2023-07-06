@@ -24,13 +24,13 @@ use crate::{
     scene::Scene,
     scene_mixer::SceneMixer,
     scenes::{
-        scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_solid::SceneSolid,
-        scene_strobo::SceneStrobo,
+        scene_modulo::SceneModulo, scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine,
+        scene_solid::SceneSolid, scene_strobo::SceneStrobo,
     },
 };
 
 fn main() {
-    let mut osc_fader_values_mutex = Arc::new(Mutex::new(OscFaderValues::new()));
+    let osc_fader_values_mutex = Arc::new(Mutex::new(OscFaderValues::new()));
     osc_start_listen(osc_fader_values_mutex.clone());
 
     let host = cpal::default_host();
@@ -114,6 +114,7 @@ fn main() {
         Box::new(SceneStrobo::new()),
         Box::new(SceneSine::new()),
         Box::new(ScenePulseYellow::new()),
+        Box::new(SceneModulo::new()),
         Box::new(SceneSolid::new()),
     ]);
 
@@ -137,7 +138,7 @@ fn main() {
         let audio_average_time_seconds =
             osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
 
-        *amp_mutex.lock().unwrap() = osc_fader_values.values[0][0] * 2.0;
+        *amp_mutex.lock().unwrap() = osc_fader_values.values[0][0] * 4.0;
 
         // get audio values
         let audio_features = audio_feature_history
@@ -170,7 +171,7 @@ fn main() {
 fn audio_in_callback<T, U>(
     signal_arr: &[f32],
     amp: f32,
-    sample_rate: f64,
+    _sample_rate: f64,
     audio_feature_history: &Mutex<AudioFeaturesHistory>,
     biquad_lpf: &mut DirectForm1<f64>,
     biquad_hpf: &mut DirectForm1<f64>,

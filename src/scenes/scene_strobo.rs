@@ -25,7 +25,7 @@ impl SceneStrobo {
 impl Scene for SceneStrobo {
     fn tick(
         &mut self,
-        _time_since_last_tick: Duration,
+        time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
         osc_fader_values: &Vec<f32>,

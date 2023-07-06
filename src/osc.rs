@@ -1,6 +1,6 @@
 extern crate rosc;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use rosc::OscPacket;
 use std::fmt::Debug;
 use std::io::ErrorKind;

@@ -19,13 +19,13 @@ impl ScenePulseYellow {
 impl Scene for ScenePulseYellow {
     fn tick(
         &mut self,
-        _time_since_last_tick: Duration,
+        time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
         osc_fader_values: &Vec<f32>,
     ) {
-        let hue = audio_features.zcr.avg * 0.00004;
-        let lightness = audio_features.rms.avg * 0.4;
+        let hue = audio_features.rms_hpf.avg;
+        let lightness = audio_features.rms_lpf.avg * 0.4;
 
         let hsv = Hsl::new(hue * 360.0, 100.0, lightness * 100.0, None);
         let rgb_255 = Rgb::from(hsv);

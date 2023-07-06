@@ -33,8 +33,8 @@ impl Scene for SceneSine {
             let mut red = (self.time_s * -1.5 + i as f64 * 7.0).sin() * 0.5 + 0.5;
             let mut blue = (self.time_s * -0.2 + i as f64 * 12.0).sin() * 0.8 + 0.5;
 
-            red = red * 0.3 * (audio_features.rms_lpf.avg * audio_features.zcr.avg * 0.01) as f64;
-            blue = blue * 0.3 * (0.5 - audio_features.rms_hpf.avg as f64 * 0.5);
+            red = red * (audio_features.rms_lpf.avg) as f64;
+            blue = blue * (0.5 - audio_features.rms_hpf.avg as f64 * 0.5);
 
             *led = Rgb::new(red, 0.0, blue, None)
         }

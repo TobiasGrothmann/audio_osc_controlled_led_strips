@@ -6,18 +6,12 @@ use crate::{audio::AudioFeatures, constants::NUM_LEDS, scene::Scene};
 
 pub struct SceneSolid {
     leds: [Rgb; NUM_LEDS as usize],
-    last_switch: Instant,
-    interval: Duration,
-    is_on: bool,
 }
 
 impl SceneSolid {
     pub fn new() -> Self {
         Self {
             leds: core::array::from_fn(|_| Rgb::new(0.0, 0.0, 0.0, None)),
-            last_switch: Instant::now(),
-            interval: Duration::from_millis(30),
-            is_on: false,
         }
     }
 }
@@ -25,7 +19,7 @@ impl SceneSolid {
 impl Scene for SceneSolid {
     fn tick(
         &mut self,
-        _time_since_last_tick: Duration,
+        time_since_last_tick: Duration,
         total_time: Duration,
         audio_features: &AudioFeatures,
         osc_fader_values: &Vec<f32>,
