@@ -16,9 +16,9 @@ pub fn render_scene(controller: &mut Controller, scene: &impl Scene) {
 fn get_brgw(rgb: &[Rgb; NUM_LEDS as usize]) -> [[u8; 4]; NUM_LEDS as usize] {
     core::array::from_fn(|i| {
         [
-            (rgb[i].blue() * 255.0).clamp(0.0, 255.0) as u8,
-            (rgb[i].red() * 255.0).clamp(0.0, 255.0) as u8,
-            (rgb[i].green() * 255.0).clamp(0.0, 255.0) as u8,
+            255.0_f64.powf(rgb[i].blue().clamp(0.0, 1.0)) as u8,
+            255.0_f64.powf(rgb[i].red().clamp(0.0, 1.0)) as u8,
+            255.0_f64.powf(rgb[i].green().clamp(0.0, 1.0)) as u8,
             0,
         ]
     })
