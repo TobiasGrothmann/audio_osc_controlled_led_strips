@@ -207,7 +207,7 @@ fn audio_in_callback<T, U>(
 
     lock.rms.add(rms);
     lock.energy.add(energy);
-    lock.zcr.add(energy);
+    lock.zcr.add(zcr);
 
     lock.rms_lpf.add(rms_lpf);
     lock.rms_hpf.add(rms_hpf);
