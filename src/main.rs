@@ -1,4 +1,5 @@
 mod audio;
+mod color;
 mod constants;
 mod led;
 mod osc;
@@ -24,8 +25,8 @@ use crate::{
     scene::Scene,
     scene_mixer::SceneMixer,
     scenes::{
-        scene_modulo::SceneModulo, scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine,
-        scene_solid::SceneSolid, scene_strobo::SceneStrobo,
+        scene_modulo::SceneModulo, scene_poles::ScenePoles, scene_pulse_yellow::ScenePulseYellow,
+        scene_sine::SceneSine, scene_solid::SceneSolid, scene_strobo::SceneStrobo,
     },
 };
 
@@ -115,6 +116,9 @@ fn main() {
         Box::new(SceneSine::new()),
         Box::new(ScenePulseYellow::new()),
         Box::new(SceneModulo::new()),
+        Box::new(ScenePoles::new()),
+        Box::new(SceneSolid::new()),
+        Box::new(SceneSolid::new()),
         Box::new(SceneSolid::new()),
     ]);
 

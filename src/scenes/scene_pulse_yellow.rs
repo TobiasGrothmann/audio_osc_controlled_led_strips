@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use colorsys::{Hsl, Rgb};
 
-use crate::{audio::AudioFeatures, constants::NUM_LEDS, scene::Scene};
+use crate::{audio::AudioFeatures, color::hsl, constants::NUM_LEDS, scene::Scene};
 
 pub struct ScenePulseYellow {
     leds: [Rgb; NUM_LEDS as usize],
@@ -25,16 +25,9 @@ impl Scene for ScenePulseYellow {
         osc_fader_values: &Vec<f32>,
     ) {
         let hue = audio_features.rms_hpf.avg;
-        let lightness = audio_features.rms_lpf.avg * 0.4;
+        let lightness = audio_features.rms_lpf.avg;
 
-        let hsv = Hsl::new(hue * 360.0, 100.0, lightness * 100.0, None);
-        let rgb_255 = Rgb::from(hsv);
-        let rgb = Rgb::new(
-            rgb_255.red() / 255.0,
-            rgb_255.green() / 255.0,
-            rgb_255.blue() / 255.0,
-            None,
-        );
+        let rgb = hsl(hue, 1.0, lightness);
 
         for (i, led) in self.leds.iter_mut().enumerate() {
             *led = rgb.clone();

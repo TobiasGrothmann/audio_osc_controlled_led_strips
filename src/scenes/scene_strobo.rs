@@ -1,8 +1,8 @@
 use std::time::{Duration, Instant};
 
-use colorsys::{Hsl, Rgb};
+use colorsys::Rgb;
 
-use crate::{audio::AudioFeatures, constants::NUM_LEDS, scene::Scene};
+use crate::{audio::AudioFeatures, color::hsl, constants::NUM_LEDS, scene::Scene};
 
 pub struct SceneStrobo {
     leds: [Rgb; NUM_LEDS as usize],
@@ -39,19 +39,12 @@ impl Scene for SceneStrobo {
             self.last_switch = Instant::now();
         }
 
-        let mut brightness = 0.0;
+        let mut lightness = 0.0;
         if self.is_on {
-            brightness = audio_features.rms_hpf.avg * 1.8;
+            lightness = audio_features.rms_hpf.avg * 1.8;
         }
 
-        let hsv = Hsl::new(hue % 360.0, 70.0, brightness * 100.0, None);
-        let mut rgb = Rgb::from(hsv);
-        rgb = Rgb::new(
-            rgb.red() / 255.0,
-            rgb.green() / 255.0,
-            rgb.blue() / 255.0,
-            None,
-        );
+        let rgb = hsl(hue, 0.7, lightness);
 
         for (i, led) in self.leds.iter_mut().enumerate() {
             *led = rgb.clone();

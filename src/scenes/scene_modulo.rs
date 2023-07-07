@@ -1,8 +1,8 @@
 use std::time::{Duration, Instant};
 
-use colorsys::{Hsl, Rgb};
+use colorsys::Rgb;
 
-use crate::{audio::AudioFeatures, constants::NUM_LEDS, scene::Scene};
+use crate::{audio::AudioFeatures, color::hsl, constants::NUM_LEDS, scene::Scene};
 
 pub struct SceneModulo {
     leds: [Rgb; NUM_LEDS as usize],
@@ -34,14 +34,8 @@ impl Scene for SceneModulo {
             let hue = osc_fader_values[5] as f64 + (i as f64 / 400.0) - modulo_factor * 0.1;
             let saturation = osc_fader_values[6] as f64;
             let lightness = osc_fader_values[7] as f64;
-            let hsl = Hsl::new(hue * 360.0, saturation * 100.0, lightness * 100.0, None);
-            let mut rgb = Rgb::from(hsl);
-            rgb = Rgb::new(
-                rgb.red() / 255.0,
-                rgb.green() / 255.0,
-                rgb.blue() / 255.0,
-                None,
-            );
+
+            let rgb = hsl(hue, saturation, lightness);
             *led = Rgb::new(
                 modulo_factor * rgb.red(),
                 modulo_factor * rgb.green(),
