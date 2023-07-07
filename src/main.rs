@@ -135,7 +135,7 @@ fn main() {
 
         let audio_average_time_seconds =
             osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
-        let time_speed = (osc_fader_values.values[2][0] as f64 * 4.0).powf(3.0);
+        let time_speed = (osc_fader_values.values[0][3] as f64 * 2.0).powf(3.0);
 
         *amp_mutex.lock().unwrap() = osc_fader_values.values[0][0] * 4.0;
 
