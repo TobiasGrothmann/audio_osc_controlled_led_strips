@@ -1,3 +1,4 @@
+pub mod scene_high_runner;
 pub mod scene_modulo;
 pub mod scene_poles;
 pub mod scene_pulse_yellow;
