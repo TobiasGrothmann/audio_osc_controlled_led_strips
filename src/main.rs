@@ -25,9 +25,9 @@ use crate::{
     scene::Scene,
     scene_mixer::SceneMixer,
     scenes::{
-        scene_high_runner::ScneeHighRunner, scene_modulo::SceneModulo, scene_poles::ScenePoles,
-        scene_pulse_yellow::ScenePulseYellow, scene_sine::SceneSine, scene_solid::SceneSolid,
-        scene_strobo::SceneStrobo,
+        scene_high_runner::ScneeHighRunner, scene_low_runner::SceneLowRunner,
+        scene_modulo::SceneModulo, scene_poles::ScenePoles, scene_pulse_yellow::ScenePulseYellow,
+        scene_sine::SceneSine, scene_solid::SceneSolid, scene_strobo::SceneStrobo,
     },
 };
 
@@ -118,8 +118,8 @@ fn main() {
         Box::new(ScenePulseYellow::new()),
         Box::new(SceneModulo::new()),
         Box::new(ScenePoles::new()),
+        Box::new(SceneLowRunner::new()),
         Box::new(ScneeHighRunner::new()),
-        Box::new(SceneSolid::new()),
         Box::new(SceneSolid::new()),
     ]);
 
