@@ -15,9 +15,12 @@ pub struct OscFaderValues {
 }
 impl OscFaderValues {
     pub fn new() -> Self {
-        Self {
-            values: vec![vec![0.0; 30]; 10],
-        }
+        let mut values = vec![vec![0.0; 30]; 10];
+        values[0][0] = 0.25;
+        values[0][1] = 0.5;
+        values[1][1] = 1.0;
+        values[2][0] = 0.4;
+        Self { values: values }
     }
 }
 
