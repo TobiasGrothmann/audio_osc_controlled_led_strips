@@ -125,16 +125,9 @@ fn main() {
 
     let start_time = Instant::now();
     let mut time_last_tick = start_time;
+    let mut total_time = Duration::from_secs_f64(0.0);
 
     loop {
-        // compute time
-        let now = Instant::now();
-        let total_time = now - start_time;
-        let time_since_last_tick = now - time_last_tick;
-        time_last_tick = now;
-
-        // println!("frame dur millis: {}", time_since_last_tick.as_millis());
-
         // get osc values
         let osc_fader_values = osc_fader_values_mutex.lock().unwrap().clone();
         let osc_fader_values_for_scene = osc_fader_values.values[2].clone();
@@ -142,8 +135,16 @@ fn main() {
 
         let audio_average_time_seconds =
             osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
+        let time_speed = (osc_fader_values.values[2][0] as f64 * 4.0).powf(3.0);
 
         *amp_mutex.lock().unwrap() = osc_fader_values.values[0][0] * 4.0;
+
+        // compute time
+        let now = Instant::now();
+        let time_since_last_tick = now - time_last_tick;
+        total_time += time_since_last_tick.mul_f64(time_speed);
+        time_last_tick = now;
+        // println!("frame dur millis: {}", time_since_last_tick.as_millis());
 
         // get audio values
         let audio_features = audio_feature_history

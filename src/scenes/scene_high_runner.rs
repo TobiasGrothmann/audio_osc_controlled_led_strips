@@ -39,7 +39,7 @@ impl Scene for ScneeHighRunner {
             return;
         }
 
-        let hue = osc_fader_values[5] as f64 + total_time.as_secs_f64() * 0.1;
+        let hue = osc_fader_values[5] as f64 + total_time.as_secs_f64() * 0.001;
         let lightness = audio_features.rms_hpf.avg;
         self.leds[0] = hsl(hue, 0.9, lightness);
 
