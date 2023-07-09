@@ -112,6 +112,12 @@ fn main() {
         .build()
         .expect("could not build controller");
 
+    for (i, led) in controller.leds_mut(0).iter_mut().enumerate() {
+        *led = [100, 100, 100, 0];
+    }
+    controller.render().expect("could not render on controller");
+    thread::sleep(Duration::from_secs_f64(0.2));
+
     let mut scene_mixer = SceneMixer::new(vec![
         Box::new(SceneStrobo::new()),
         Box::new(SceneSine::new()),
@@ -216,6 +222,6 @@ fn audio_in_callback<T, U>(
     lock.energy.add(energy);
     lock.zcr.add(zcr);
 
-    lock.rms_lpf.add(rms_lpf * 0.9);
-    lock.rms_hpf.add(rms_hpf * 1.3);
+    lock.rms_lpf.add(rms_lpf * 0.85);
+    lock.rms_hpf.add(rms_hpf * 1.6);
 }
