@@ -74,13 +74,13 @@ fn main() {
     let mut biquad_hpf = DirectForm1::<f64>::new(coeffs_hpf);
 
     let amp_mutex = Arc::new(Mutex::new(1.0));
-    let amp_mutex_for_autio_thread = amp_mutex.clone();
+    let amp_mutex_for_audio_thread = amp_mutex.clone();
 
     let stream = device
         .build_input_stream(
             &config.into(),
             move |data, _: &_| {
-                let amp = *amp_mutex_for_autio_thread.lock().unwrap();
+                let amp = *amp_mutex_for_audio_thread.lock().unwrap();
                 audio_in_callback::<f32, f32>(
                     data,
                     amp,
