@@ -31,6 +31,10 @@ use crate::{
     },
 };
 
+fn sin2(n: f32) -> f32 {
+    n.sin() * 0.5 + 0.5
+}
+
 fn main() {
     let osc_fader_values_mutex = Arc::new(Mutex::new(OscFaderValues::new()));
     osc_start_listen(osc_fader_values_mutex.clone());
@@ -73,7 +77,7 @@ fn main() {
     .unwrap();
     let mut biquad_hpf = DirectForm1::<f64>::new(coeffs_hpf);
 
-    let amp_mutex = Arc::new(Mutex::new(1.0));
+    let amp_mutex = Arc::new(Mutex::new(1.4));
     let amp_mutex_for_audio_thread = amp_mutex.clone();
 
     let stream = device
@@ -136,14 +140,22 @@ fn main() {
     loop {
         // get osc values
         let osc_fader_values = osc_fader_values_mutex.lock().unwrap().clone();
-        let osc_fader_values_for_scene = osc_fader_values.values[2].clone();
-        let osc_fader_values_for_mixer = osc_fader_values.values[1].clone();
+        let mut osc_fader_values_for_scene = osc_fader_values.values[2].clone();
+        let mut osc_fader_values_for_mixer = osc_fader_values.values[1].clone();
 
-        let audio_average_time_seconds =
-            osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
-        let time_speed = (osc_fader_values.values[0][3] as f64 * 2.0).powf(3.0);
+        osc_fader_values_for_mixer[6] = sin2(total_time.as_secs_f32() * 0.211);
+        osc_fader_values_for_mixer[7] = sin2(total_time.as_secs_f32() * 0.222);
+        osc_fader_values_for_mixer[4] = sin2(total_time.as_secs_f32() * 0.02) * 0.5;
+        osc_fader_values_for_mixer[3] = sin2(total_time.as_secs_f32() * 0.002) * 0.4;
 
-        *amp_mutex.lock().unwrap() = osc_fader_values.values[0][0] * 4.0;
+        // let audio_average_time_seconds =
+        // osc_fader_values.values[0][1] * 0.2 + osc_fader_values.values[0][2] * 20.0;
+        let audio_average_time_seconds = sin2(total_time.as_secs_f32() * 0.0334) * 0.2 + 0.05;
+        // let time_speed = (osc_fader_values.values[0][3] as f64 * 2.0).powf(3.0);
+        let time_speed = 0.8;
+
+        // *amp_mutex.lock().unwrap() = osc_fader_values.values[0][0] * 4.0;
+        // *amp_mutex.lock().unwrap() = 1.5;
 
         // compute time
         let now = Instant::now();
